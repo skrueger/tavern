@@ -1,0 +1,4 @@
+# cargo.toml
+# Configuration file for cargo.
+[build]
+target-dir = "build"
