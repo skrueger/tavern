@@ -5,8 +5,8 @@
 #![cfg_attr(not(test), feature(lang_items))]
 // The lang_items feature creates a build warning for internal_features.
 #![cfg_attr(not(test), allow(internal_features))]
-
-use crate::atags::Atags;
+// ptr_internals is needed for core::ptr::Unique.
+#![cfg_attr(not(test), feature(ptr_internals))]
 
 extern crate alloc;
 
@@ -15,6 +15,17 @@ mod atags;
 mod hw;
 mod lang_items;
 mod mutex;
+#[cfg(not(test))]
+mod process;
+#[cfg(not(test))]
+mod traps;
+mod vm;
+mod volatile;
+
+use atags::Atags;
+use hw::interrupt::{Controller as InterruptController, Interrupt};
+#[cfg(not(test))]
+use process::GlobalScheduler;
 
 #[allow(unused_macros)]
 #[macro_export]
@@ -38,9 +49,15 @@ macro_rules! kprint {
     };
 }
 
+/// The `tick` time.
+const TICK: u32 = 2 * 1_000 * 1_000;
+
 #[cfg(not(test))]
 #[global_allocator]
 static ALLOCATOR: allocator::Allocator = allocator::Allocator::uninitialized();
+
+#[cfg(not(test))]
+static SCHEDULER: GlobalScheduler = GlobalScheduler::uninitialized();
 
 #[no_mangle]
 pub extern "C" fn kmain() {
@@ -57,6 +74,16 @@ pub extern "C" fn kmain() {
             kprintln!("Atags mem start: {}, size: {}", mem.start, mem.size);
         }
     }
+
+    let mut interrupt_controller = InterruptController::new();
+    interrupt_controller.enable(Interrupt::Timer1);
+
+    let mut timer = crate::hw::timer::Timer::new();
+
+    timer.tick_in(TICK);
+
+    #[cfg(not(test))]
+    SCHEDULER.start();
 
     kprintln!("kmain exit");
 }

@@ -158,8 +158,128 @@ _vectors:
     HANDLER(3, 2)
     HANDLER(3, 3)
 
+// context_save creates a trap frame and calls handle_exception.
+//
+// Arguments:
+// x0[0:15] is the source exception
+// x0[16:31] is the kind
 context_save:
+    // First build the stack frame.
+    // Save all registers before using them, so they
+    // can be restored.
+    // This does not save x0 and x30 (LR) because
+    // HANDLE already saves them.
+    stp     x29, xzr, [SP, #-0x10]
+    stp     x27, x28, [SP, #-0x20]
+    stp     x25, x26, [SP, #-0x30]
+    stp     x23, x24, [SP, #-0x40]
+    stp     x21, x22, [SP, #-0x50]
+    stp     x19, x20, [SP, #-0x60]
+    stp     x17, x18, [SP, #-0x70]
+    stp     x15, x16, [SP, #-0x80]
+    stp     x13, x14, [SP, #-0x90]
+    stp     x11, x12, [SP, #-0xA0]
+    stp     x9, x10, [SP, #-0xB0]
+    stp     x7, x8, [SP, #-0xC0]
+    stp     x5, x6, [SP, #-0xD0]
+    stp     x3, x4, [SP, #-0xE0]
+    stp     x1, x2, [SP, #-0xF0]
+    sub     sp, sp, #0xF0
+
+    stp     q30, q31, [SP, #-0x20]
+    stp     q28, q29, [SP, #-0x40]
+    stp     q26, q27, [SP, #-0x60]
+    stp     q24, q25, [SP, #-0x80]
+    stp     q22, q23, [SP, #-0xA0]
+    stp     q20, q21, [SP, #-0xC0]
+    stp     q18, q19, [SP, #-0xE0]
+    stp     q16, q17, [SP, #-0x100]
+    stp     q14, q15, [SP, #-0x120]
+    stp     q12, q13, [SP, #-0x140]
+    stp     q10, q11, [SP, #-0x160]
+    stp     q8, q9, [SP, #-0x180]
+    stp     q6, q7, [SP, #-0x1A0]
+    stp     q4, q5, [SP, #-0x1C0]
+    stp     q2, q3, [SP, #-0x1E0]
+    stp     q0, q1, [SP, #-0x200]
+    sub     sp, sp, #0x200
+
+    mrs x3, TPIDR_EL0
+    mrs x4, SP_EL0
+    stp     x4, x3, [SP, #-0x10]
+    mrs x3, SPSR_EL1
+    mrs x4, ELR_EL1
+    stp     x4, x3, [SP, #-0x20]
+    sub     sp, sp, #0x20
+
+    // set x2 to sp which is pointing to the trap frame.
+    mov x2, sp
+
+    mrs x1, ESR_EL1 // exception syndrome register
+
+    // This frame's LR has not been
+    // saved yet because of the `TrapFrame` construction.
+    stp x29, lr, [SP, #-0x10]!
+
+    bl handle_exception
+
+    ldp x29, lr, [SP], #0x10
+    mov x29, sp // Set frame pointer to bottom of new frame
+
+    // fall thru to context_restore.
+    // I think that is the correct thing to do
+    // because it resets the `sp` and
+    // has a `ret` back to HANDLE which resets the
+
+
+.global context_restore
 context_restore:
+    // ELR_EL1 and SPSR_EL1
+    ldp     x4, x3, [SP]
+    msr     SPSR_EL1, x3
+    msr     ELR_EL1, x4
+
+    // SP_EL0 and TPIDR_EL0
+    ldp     x4, x3, [SP, #0x10]
+    msr     TPIDR_EL0, x3
+    msr     SP_EL0, x4
+    add     sp, sp, #0x20
+
+    ldp     q0, q1, [SP]
+    ldp     q2, q3, [SP, #0x20]
+    ldp     q4, q5, [SP, #0x40]
+    ldp     q6, q7, [SP, #0x60]
+    ldp     q8, q9, [SP, #0x80]
+    ldp     q10, q11, [SP, #0xA0]
+    ldp     q12, q13, [SP, #0xC0]
+    ldp     q14, q15, [SP, #0xE0]
+    ldp     q16, q17, [SP, #0x100]
+    ldp     q18, q19, [SP, #0x120]
+    ldp     q20, q21, [SP, #0x140]
+    ldp     q22, q23, [SP, #0x160]
+    ldp     q24, q25, [SP, #0x180]
+    ldp     q26, q27, [SP, #0x1A0]
+    ldp     q28, q29, [SP, #0x1C0]
+    ldp     q30, q31, [SP, #0x1E0]
+    add     sp, sp, #0x200
+
+    ldp    x1, x2, [SP]
+    ldp    x3, x4, [SP, #0x10]
+    ldp    x5, x6, [SP, #0x20]
+    ldp    x7, x8, [SP, #0x30]
+    ldp    x9, x10, [SP, #0x40]
+    ldp    x11, x12, [SP, #0x50]
+    ldp    x13, x14, [SP, #0x60]
+    ldp    x15, x16, [SP, #0x70]
+    ldp    x17, x18, [SP, #0x80]
+    ldp    x19, x20, [SP, #0x90]
+    ldp    x21, x22, [SP, #0xA0]
+    ldp    x23, x24, [SP, #0xB0]
+    ldp    x25, x26, [SP, #0xC0]
+    ldp    x27, x28, [SP, #0xD0]
+    ldp    x29, xzr, [SP, #0xE0]
+    add    sp, sp, #0xF0
+
     ret
 
 _bss_segment:
