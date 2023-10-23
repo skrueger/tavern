@@ -24,9 +24,10 @@ Other development environments (e.g., other linux distributions, macOS, or Windo
 but they would likely work if you're someone familiar with rust and toolchains in those environments.
 
 Tavern requires:
-- [Rust (v1.74.0-nightly aarch64-unknown-none)](https://rustup.rs/)
+- [Rust](https://rustup.rs/)
     - Tavern uses the release channel `nightly` because it is needed for `lang_items` and `ptr_internals`. `nightly` is installed with `rustup default nightly`.
-    - Tavern runs bare metal aarch64 and thus targets `aarch64-unknown-none`. That target is installed with `rustup target add aarch64-unknown-none`.
+    - Tavern runs bare metal aarch64 with a floating point unit and thus targets `aarch64-unknown-none`. That target is installed with `rustup target add aarch64-unknown-none`.
+    - As of October 2023, Tavern built successfully with Rust `v1.74.0-nightly`.
 - [Make](https://packages.ubuntu.com/jammy/make)
 - [aarch64 toolchain](https://developer.arm.com/Tools%20and%20Software/GNU%20Toolchain)
     - The aarch64 toolchain is needed for a cross platform aarch64 assembler and linker. Download the aarch64 toolchain and add its `bin` directory to your `PATH`.
