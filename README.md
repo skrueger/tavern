@@ -40,8 +40,11 @@ The Raspberry Pi's firmware loads Tavern at memory address `0x80000` and its ARM
 Tavern's entry point is in `kernel.S` and labeled with `__start`.
 From there Tavern switches over to ARM Exception Level EL1 (Kernel-mode), sets ups the stack pointer `sp`, sets up the exception handler, and then jumps into the function
 `kmain` which is in `lib.rs`.
-In `kmain`, Tavern sets up the global heap memory allocator and launches 2 user-mode processes.
+In `kmain`, Tavern sets up the global heap memory allocator.
 The allocator's memory range is determined by the Atags values that were loaded in by the firmware.
+After the memory allocator is initialized, it initializes a hardware timer and a cooresponding component interrupt controller.
+The timer interrupt drives round robbin process scheduling.
+Finally, Tavern creates 2 user-mode processes that continuously output to the UART0 serial port.
 
 
 ## Appendix: Raspberry Pi Model 3B+
