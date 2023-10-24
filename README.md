@@ -6,7 +6,7 @@ Tavern is a [kernel](https://en.wikipedia.org/wiki/Kernel_\(operating_system\)) 
 It is a simple unix-like monolith
 that runs AArch64 user-mode processes with virtual memory addressing.
 It is my (Simon Krueger) hobby project and its primary goal is education in kernel development.
-I started this project because I wanted to learn the low-level details of how a kernel works by actually implementing one.
+I started this project because I wanted to learn the low-level details of how a kernel works by implementing one from scratch.
 I started this project from [Stanford's 2018 CS140e course](https://cs140e.sergio.bz/).
 The course provided the initial skeleton and I've been fleshing out the implementation.
 
